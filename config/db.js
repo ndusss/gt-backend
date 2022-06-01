@@ -16,11 +16,11 @@ pool.query(sql_post_exist, function(err, result) {
 		// CREATE post table
 		let sql_create_post = `
 			CREATE TABLE IF NOT EXISTS post (
-				id int primary key auto_increment,
-				title varchar(255) not null,
-				body TEXT not null,
-				created_at datetime not null,
-				author_id int not null
+				id INT PRIMARY KEY AUTO_INCREMENT,
+				title VARCHAR255) NOT NULL,
+				body TEXT NOT NULL,
+				created_at DATETIME NOT NULL,
+				author_id INT NOT NULL
 			)`;
 
 		pool.query(sql_create_post, function(err, result) {
@@ -37,20 +37,35 @@ pool.query(sql_comment_exist, function(err, result) {
 		// CREATE comment table
 		let sql_create_comment = `
 			CREATE TABLE IF NOT EXISTS comment (
-				id int primary key auto_increment,
-				commenter_id int not null,
-				comment TEXT not null,
-				created_at datetime not null,
-				upvoted_score INT DEFAULT 0 not null,
-				post_id int not null,
-				foreign key (post_id) references post(id)
+				id INT PRIMARY KEY AUTO_INCREMENT,
+				commenter_id INT NOT NULL,
+				comment TEXT NOT NULL,
+				created_at DATETIME NOT NULL,
+				upvoted_score INT DEFAULT 0 NOT NULL,
+				post_id INT NOT NULL,
+				FOREIGN KEY (post_id) references post(id)
 			)`;
 
 		pool.query(sql_create_comment, function(err, result) {
 			if (err) throw err;
 			console.log("Comment table created");
 		})
-	};
+	}
+	else {
+		// Add feature nested comment by adding column parent_comment id
+		let sql_column_parent_comment_id_exist = `SHOW COLUMNS FROM comment LIKE 'parent_comment_id';`;
+		pool.query(sql_column_parent_comment_id_exist, function(err, result) {
+			if (result.length === 0) {
+				let sql_alter_column_parent_comment_id = `ALTER TABLE comment ADD COLUMN parent_comment_id INT NOT NULL AFTER id;`
+				pool.query(sql_alter_column_parent_comment_id, function(err, result) {
+					if (err) throw err;
+					console.log("New column 'parent_comment_id' created")
+				})
+			} else {
+				console.log("Column 'parent_comment_id' exists")
+			}
+		})
+	}
 });
 
 module.exports = pool.promise();
